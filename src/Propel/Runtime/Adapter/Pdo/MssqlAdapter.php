@@ -8,6 +8,8 @@
 
 namespace Propel\Runtime\Adapter\Pdo;
 
+
+use PDOException;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Propel\Runtime\ActiveQuery\Lock;
 use Propel\Runtime\Adapter\Exception\ColumnNotFoundException;
@@ -15,6 +17,10 @@ use Propel\Runtime\Adapter\Exception\MalformedClauseException;
 use Propel\Runtime\Adapter\SqlAdapterInterface;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Propel\Runtime\Map\DatabaseMap;
+use Propel\Runtime\Adapter\Exception\AdapterException;
+use Propel\Runtime\Connection\PdoConnection;
+use Propel\Runtime\Exception\InvalidArgumentException;
+
 
 /**
  * This is used to connect to a MSSQL database.
@@ -23,6 +29,30 @@ use Propel\Runtime\Map\DatabaseMap;
  */
 class MssqlAdapter extends PdoAdapter implements SqlAdapterInterface
 {
+
+
+        /**
+     * Build database connection
+     *
+     * @param array $params connection parameters
+     *
+     * @throws \Propel\Runtime\Exception\InvalidArgumentException
+     * @throws \Propel\Runtime\Adapter\Exception\AdapterException
+     *
+     * @return \Propel\Runtime\Connection\PdoConnection
+     */
+    public function getConnection(array $params): PdoConnection
+    {
+        //sqlserv can not have user or password including in the dsn
+        //This will failed if there is a ; in the user or password
+        $params['dsn'] = preg_replace('/user=.*;?/i', '',  $params['dsn'] );
+        $params['dsn'] = preg_replace('/password=.*;?/i', '',  $params['dsn'] );
+      
+        return parent::getConnection($params);
+    }
+
+
+
     /**
      * MS SQL Server does not support SET NAMES
      *
